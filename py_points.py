@@ -17,6 +17,7 @@ points = np.array(
 
 
 points_binary_blob = points.tobytes()
+
 gltf = pygltflib.GLTF2(
     scene=0,
     scenes=[pygltflib.Scene(nodes=[0])],
@@ -25,7 +26,7 @@ gltf = pygltflib.GLTF2(
         pygltflib.Mesh(
             primitives=[
                 pygltflib.Primitive(
-                    attributes=pygltflib.Attributes(POSITION=0)
+                    attributes=pygltflib.Attributes(POSITION=0), mode=pygltflib.POINTS
                 )
             ]
         )
@@ -57,5 +58,4 @@ gltf = pygltflib.GLTF2(
 gltf.set_binary_blob(points_binary_blob)
 
 
-gltf.save('test_p.gltf')
-
+gltf.save('points.gltf')

@@ -3,7 +3,7 @@ import pygltflib
 import random
 
 points_orig = []
-point_count = 0;
+point_count = 0
 while point_count < 1000:
     point_count += 1
     randomVector = [        
@@ -12,29 +12,12 @@ while point_count < 1000:
         (random.random() * 2.0) - 1.0
         ]
     normalizedVector = randomVector / np.linalg.norm(randomVector)
-    print(normalizedVector)
     points_orig.append(normalizedVector)
     points = np.array(
     points_orig,
     dtype="float32",
 )
-triangles = np.array(
-    [
-        [0, 1, 2],
-        [3, 2, 1],
-        [1, 0, 4],
-        [5, 4, 0],
-        [3, 1, 6],
-        [4, 6, 1],
-        [2, 3, 7],
-        [6, 7, 3],
-        [0, 2, 5],
-        [7, 5, 2],
-        [5, 7, 4],
-        [6, 4, 7],
-    ],
-    dtype="uint8",
-)
+
 
 points_binary_blob = points.tobytes()
 
@@ -78,5 +61,5 @@ gltf = pygltflib.GLTF2(
 gltf.set_binary_blob(points_binary_blob)
 
 
-gltf.save('test_tpm.gltf')
+gltf.save('sphere.gltf')
 

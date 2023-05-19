@@ -3,7 +3,6 @@ import pygltflib
 import random
 import opensimplex
 import pyrender
-import trimesh
 import math
 
 
@@ -160,7 +159,7 @@ gltf.set_binary_blob(points_binary_blob)
 gltf.save('test_tpm.gltf')
 
 #viewable = trimesh.verticies.copy()
-viewable = trimesh.points.PointCloud(points)
+#viewable = trimesh.points.PointCloud(points)
 #viewable.show()
 print(str(noiseRealMin) + ' -> ' + str(noiseRealMax))
 print(str(noiseBelowZero) + ' | ' + str(noiseAboveZero))
