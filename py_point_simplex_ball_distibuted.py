@@ -7,8 +7,15 @@ import math
 
 
 noiseMin = 0
-noiseMax = 0.8
-curve = 3.0
+noiseMax = 0.7
+curve = 0.5
+geoMin = -1
+geoMax = 1
+resolution = 100
+spread = 1.5
+step = (geoMax-geoMin )/resolution
+
+
 
 noiseRealMax = 0
 noiseRealMin = 0
@@ -16,14 +23,15 @@ noiseAboveZero = 0
 noiseBelowZero = 0
 noiseRange = noiseMax - noiseMin
 noiseDistribution = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-normalizedDistribution = [0,0,0,0,0,0,0,0,0,0]
-pointLimit = 1000000
+normalizedDistribution = [0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+starsAddedAtDistribution = [0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+pointLimit = 100
 thresholdMin = 0.5
 thresholdMax = 0.5
 range = thresholdMax - thresholdMin
 mult = 5
 points_orig = []
-point_count = 0;
+point_count = 0
 noise = opensimplex.OpenSimplex (seed=42)
 
 def clamp(val, minVal, maxVal):
@@ -63,7 +71,7 @@ def normaliseNoise(val, fold):
     
     normalized = (val - noiseMin)/noiseRange
     
-    noiseDistribution[abs(index)+10] += 1
+    
     #print(str(normalized))
 
     #print(str(sloped*10))
@@ -71,14 +79,24 @@ def normaliseNoise(val, fold):
     #index = max([0, min([index, 1])])
     #print(index)
     #noiseDistribution[index] += 1
-    return normalized
+    return normalized ** curve
 
 def shouldInclude(val):
     global normalizedDistribution
 
-    
-    sloped = val**curve
-    normalizedDistribution[clamp( math.floor(sloped*10), 0, 9 )] += 1
+    #returnValues = [0,1,2,4,8,16,32,64,128, 256]
+    returnValues = [0,0,0,0,0,0,2,8,32,128]
+    #curved = ((val/10.0)**2.0)*10
+    #stars = (2**curved)-1
+    #normalizedDistribution[val] = 
+
+    #starsAddedAtDistribution[math.floor(val*10)] = stars
+    #noiseDistribution[math.floor(val*10)] += 1
+    #print(val)
+    prepIndex = min([val, 9])
+    index = 9 - prepIndex
+    return returnValues[index]
+
 
     #return True
     # if val > thresholdMax:
@@ -88,14 +106,51 @@ def shouldInclude(val):
     
     #return False
 
-    if sloped > random.random():
-        return True
-    else:
-        return False
-
 
 starsCount = 0
-while point_count < pointLimit:
+x = geoMin
+y = geoMin
+z = geoMin
+
+while x < geoMax:
+    x += step
+    y = geoMin
+
+    while y < geoMax:
+        y += step
+        z = geoMin
+        #print(str(x) + ' , ' + str(y))
+        while z < geoMax:
+            z += step
+            noiseVal = checkNoiseVal(x, y, z)
+            normalizedNoise = normaliseNoise(noiseVal, True)
+            quantized = clamp(math.floor(normalizedNoise*10), 0, 9)
+            noiseDistribution[quantized] += 1
+            starsToAdd = shouldInclude(quantized)
+            starsAddedAtDistribution[quantized] += starsToAdd
+
+            iteration = 0
+            while iteration < starsToAdd:
+                point_count += 1
+                randomVector = [        
+                    (random.random() * 2.0) - 1.0,
+                    (random.random() * 2.0) - 1.0,
+                    (random.random() * 2.0) - 1.0
+                    ]
+                normalizedVector = randomVector / np.linalg.norm(randomVector)
+                normalizedVector *= random.random()**0.33  
+                sizedVector = normalizedVector * step * spread
+                fullVector = [
+                    x + sizedVector[0],
+                    y + sizedVector[1],
+                    z + sizedVector[2],
+                ]
+                points_orig.append(fullVector)  
+                iteration += 1        
+        
+
+
+while point_count < 1:
     point_count += 1
     randomVector = [        
         (random.random() * 2.0) - 1.0,
@@ -108,14 +163,28 @@ while point_count < pointLimit:
     noiseValue = checkNoiseVal(normalizedVector[0], normalizedVector[1], normalizedVector[2])
     normalizedNoise = normaliseNoise(noiseValue, True)    
     #print(str(noiseValue) + ' of ' + str(normalizedVector[0]) )
-    addStar = shouldInclude(normalizedNoise)
-    if addStar:
-        starsCount += 1
-        points_orig.append(normalizedVector)
+    # addStar = shouldInclude(normalizedNoise)
+    # if addStar:
+    #     starsCount += 1
+    #     points_orig.append(normalizedVector)
 
 points = np.array(points_orig, dtype="float32")
 points_binary_blob = points.tobytes()
 print(str(starsCount) + 'stars')
+
+print(str(noiseRealMin) + ' -> ' + str(noiseRealMax))
+print(str(noiseBelowZero) + ' | ' + str(noiseAboveZero))
+print('noiseDistribution')
+print(noiseDistribution)
+print('normalizedDistribution ')
+print(normalizedDistribution)
+print('starsAddedAtDistribution')
+print(starsAddedAtDistribution)
+print(str(7*255))
+
+total = sum(normalizedDistribution)
+print(' total: '+ str(total))
+
 gltf = pygltflib.GLTF2(
     scene=0,
     scenes=[pygltflib.Scene(nodes=[0])],
@@ -161,19 +230,7 @@ gltf.save('test_tpm.gltf')
 #viewable = trimesh.verticies.copy()
 #viewable = trimesh.points.PointCloud(points)
 #viewable.show()
-print(str(noiseRealMin) + ' -> ' + str(noiseRealMax))
-print(str(noiseBelowZero) + ' | ' + str(noiseAboveZero))
-print('noise dist ')
-print(noiseDistribution)
-print('sloped dist ')
-print(normalizedDistribution)
-total = sum(normalizedDistribution)
-perc = []
-for incident in normalizedDistribution:
-    perc.append(round(incident/total, 4))
 
-print(perc)
-print(' total: '+ str(total))
 m = pyrender.Mesh.from_points(points)
 scene = pyrender.Scene()
 scene.add(m)
