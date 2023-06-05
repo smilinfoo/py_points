@@ -6,11 +6,17 @@ import pyrender
 import trimesh
 import math
 
-
+# opensimplex returns values ~ between -1 and 1
+# this sets the threshold for a point to be generated
+# any value below noiseMin will result in empty space, and value above moiseMax will garauntee a point
 noiseMin = 0
 noiseMax = 0.8
+# once the noise is normalized between noiseMin and noiseMax to 0-1 we can apply an exponent to
+# shape the slope into a curve.  Higher values push the curve toward 0, lower values toward 1.  
+# 1 is a straight line
 curve = 3.0
 
+# TODO: better comments for this
 noiseRealMax = 0
 noiseRealMin = 0
 noiseAboveZero = 0
@@ -24,7 +30,7 @@ thresholdMax = 0.5
 range = thresholdMax - thresholdMin
 mult = 5
 points_orig = []
-point_count = 0;
+point_count = 0
 noise = opensimplex.OpenSimplex (seed=42)
 
 def clamp(val, minVal, maxVal):
@@ -58,20 +64,10 @@ def normaliseNoise(val, fold):
 
     if fold:
         val = abs(val)
-
-   # index = math.floor((max([min([val,1]),-1]) * 10))
-    #print('val:'+str(val)+ ' index:'+str(index))
     
     normalized = (val - noiseMin)/noiseRange
     
     noiseDistribution[abs(index)+10] += 1
-    #print(str(normalized))
-
-    #print(str(sloped*10))
-    #index = math.floor(normalized*10) 
-    #index = max([0, min([index, 1])])
-    #print(index)
-    #noiseDistribution[index] += 1
     return normalized
 
 def shouldInclude(val):
@@ -80,14 +76,6 @@ def shouldInclude(val):
     
     sloped = val**curve
     normalizedDistribution[clamp( math.floor(sloped*10), 0, 9 )] += 1
-
-    #return True
-    # if val > thresholdMax:
-    #     return True
-    # elif val < thresholdMin:
-    #     return False
-    
-    #return False
 
     if sloped > random.random():
         return True
@@ -108,7 +96,6 @@ while point_count < pointLimit:
 
     noiseValue = checkNoiseVal(normalizedVector[0], normalizedVector[1], normalizedVector[2])
     normalizedNoise = normaliseNoise(noiseValue, True)    
-    #print(str(noiseValue) + ' of ' + str(normalizedVector[0]) )
     addStar = shouldInclude(normalizedNoise)
     if addStar:
         starsCount += 1
@@ -159,7 +146,8 @@ gltf.set_binary_blob(points_binary_blob)
 
 gltf.save('test_tpm.gltf')
 
-#viewable = trimesh.verticies.copy()
+# Stats about output distribution
+# TODO: explain the outut
 viewable = trimesh.points.PointCloud(points)
 #viewable.show()
 print(str(noiseRealMin) + ' -> ' + str(noiseRealMax))

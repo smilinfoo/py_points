@@ -85,7 +85,7 @@ def shouldInclude(val):
     global normalizedDistribution
 
     #returnValues = [0,1,2,4,8,16,32,64,128, 256]
-    returnValues = [0,0,0,0,0,0,2,8,32,128]
+    returnValues = [0,0,0,0,0,0,0,0,0,32]
     #curved = ((val/10.0)**2.0)*10
     #stars = (2**curved)-1
     #normalizedDistribution[val] = 
